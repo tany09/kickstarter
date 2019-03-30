@@ -18,7 +18,7 @@ beforeEach(async () => {
     .deploy({data : compiledFactory.bytecode})
     .send({from : accounts[0], gas: 1000000});
 
-    await campaignFactory.methods.createCampaign('100').send({from: accounts[0], gas :'1000000'});
+    await campaignFactory.methods.createCampaign('1').send({from: accounts[0], gas :'1000000'});
 
     const addresses = await campaignFactory.methods.getDeployedCampaigns().call();
     campaignAddress = addresses[0];
@@ -52,4 +52,22 @@ describe('campaign', () => {
             assert(!isContributor);
         }
     });
+
+    it('allows a manager to make a payment request', async () => {
+        await campaign.methods.createRequest('for dev', 0, accounts[1]).send({from: accounts[0], gas : '1000000'});
+        const request = await campaign.methods.requests(0).call();
+        assert.equal("for dev", request.description);
+    });
+
+    it('processes request', async () => {
+        await campaign.methods.contribute().send({from: accounts[1], value: web3.utils.toWei('10', 'ether'), gas: '1000000'});
+        await campaign.methods.createRequest("for dev", web3.utils.toWei('5', 'ether'), accounts[1]).send({from: accounts[0], gas : '1000000'});
+        await campaign.methods.approveRequest(0).send({from: accounts[1], gas : '1000000'});
+        await campaign.methods.finalizeRequest(0).send({from: accounts[0], gas : '1000000'});
+
+        const request = await campaign.methods.requests(0).call();
+        console.log(accounts[1]);
+
+        assert(request.complete);
+    })
 })
