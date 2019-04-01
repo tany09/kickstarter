@@ -66,7 +66,6 @@ describe('campaign', () => {
         await campaign.methods.finalizeRequest(0).send({from: accounts[0], gas : '1000000'});
 
         const request = await campaign.methods.requests(0).call();
-        console.log(accounts[1]);
 
         assert(request.complete);
     })
